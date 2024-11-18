@@ -63,7 +63,6 @@ Fila fita;
 Fila impressora; 
 Fila finalizados; /* cemitério de processos */
 
-int numPIDs = 0; /* Quantidade de processos encontrados pelo escalonador */
 int tempoSistema; /* contador geral de tempo total p/ o turnaround */
 
 /* Métodos do escalonador */
@@ -167,6 +166,9 @@ void LeProcessos(FILE *file) {
             case 2:
                 processo->operacao_io->tipo = IMPRESSORA;
                 break;
+            
+            default: 
+                processo->operacao_io->tipo = IMPRESSORA;
         }
 
         filaInsere(&espera, processo);
@@ -402,7 +404,7 @@ void roundRobin() {
         printf("||  Lista de processos na fila de ESPERA          ||\n");
         printf("===================================================\n");
         printf("\n");
-        displayProcessos(&alta);
+        displayProcessos(&espera);
 
         printf("===================================================\n");
         printf("||  Lista de processos na fila de ALTA prioridade  ||\n");
@@ -442,9 +444,6 @@ void roundRobin() {
 
         /* Verifica se alguém finalizou o IO */
         fimDeIO();
-        
-        /* Verifica a quantidade de processos (PIDs precisam ser concedidos em ordem) */
-        if (processo_atual->PID > numPIDs) numPIDs = processo_atual->PID;
     }
     printf("\n\nFIM DO ESCALONAMENTO: NÃO há processos a serem escalonados.\n");
 }
