@@ -4,12 +4,12 @@
 
 /* Configuracoes gerais do Escalonador */
 #define MAX_PROCESSOS                     5  
-#define QUANTUM                           6                       
+#define QUANTUM                           2                       
 
 /* Define o tempo necessario para cada tipo de I/O */
-#define IO_DISCO_TEMPO                    4                
+#define IO_DISCO_TEMPO                    3                
 #define IO_FITA_TEMPO                     5
-#define IO_IMPRESSORA_TEMPO               2
+#define IO_IMPRESSORA_TEMPO               7
 
 /* Tipos de I/O */
 typedef enum {
@@ -171,7 +171,7 @@ void LeProcessos(FILE *file) {
                 processo->operacao_io->tipo = IMPRESSORA;
         }
 
-        filaInsere(&espera, processo);
+        filaInsere(&alta, processo);
     }
 }
 
