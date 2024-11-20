@@ -78,7 +78,7 @@ void iniciaProcessos();                                    /* move os processos 
 void displayProcesso(PCB *processo);                       /* mostra um processo individualmente */
 void displayProcessos(Fila *fila);                         /* mostra todos os processos de uma fila */
 void addOperacaoIO(PCB *processo, int inicio, int codigo); /* adiciona uma operacao de I/O especifica no processo */
-void IOHandler(PCB *processo);                             /* Lida com IO, supondo que ha IO */
+void IOHandler(PCB *processo, OperacaoIO *OperacaoIO);                             /* Lida com IO, supondo que ha IO */
 void fimDeIO();                                            /* Verifica se houve fim de IO em qualquer uma das filas de IO */
 
 int main(int argc, char *argv[])
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
     printf("=============================================\n");
     printf("\n");
 
-    displayProcessos(&espera);
+    displayProcessos(&alta);
 
     printf("=============================================\n");
     printf("||  O escalonamento dos processos começará! ||\n");
@@ -158,33 +158,33 @@ void LeProcessos(FILE *file)
         {
             operacao = (OperacaoIO *)malloc(sizeof(OperacaoIO) * processo->quantidade_ios);
             processo->operacao_io = operacao;
-            for (int i = 0, j = 8; i < processo->quantidade_ios; i++, j+=4)
+            for (int i = 0, j = 8; i < processo->quantidade_ios; i++, j += 4)
             {
-                if ((operacao+i) == NULL)
+                if ((operacao + i) == NULL)
                 {
                     printf("Erro de alocação de memória\n");
                     exit(-1);
                 }
 
-                (processo->operacao_io+i)->tipo = atoi(&words[j]);
-                (processo->operacao_io+i)->instante_inicio = atoi(&words[j + 2]);
+                (processo->operacao_io + i)->tipo = atoi(&words[j]);
+                (processo->operacao_io + i)->instante_inicio = atoi(&words[j + 2]);
 
-                switch (j)
+                switch (atoi(&words[j]))
                 {
                 case 0:
-                    (processo->operacao_io+i)->tipo = DISCO;
+                    (processo->operacao_io + i)->tipo = DISCO;
                     break;
 
                 case 1:
-                    (processo->operacao_io+i)->tipo = FITA;
+                    (processo->operacao_io + i)->tipo = FITA;
                     break;
 
                 case 2:
-                    (processo->operacao_io+i)->tipo = IMPRESSORA;
+                    (processo->operacao_io + i)->tipo = IMPRESSORA;
                     break;
 
                 default:
-                    (processo->operacao_io+i)->tipo = IMPRESSORA;
+                    (processo->operacao_io + i)->tipo = IMPRESSORA;
                 }
             }
         }
@@ -278,7 +278,10 @@ void displayProcesso(PCB *processo)
         printf("Não tem I/O.\n");
     }
 
-    //printf("Inicio I/O: %d, Codigo: %d\n", processo->operacao_io->instante_inicio, processo->operacao_io->tipo);
+    for (int i = 0; i < processo->quantidade_ios; i++)
+    {
+        printf("Inicio I/O: %d, Codigo: %d\n", (processo->operacao_io + i)->instante_inicio, (processo->operacao_io + i)->tipo);
+    }
 
     printf("\n");
 }
@@ -311,10 +314,10 @@ void displayPCB(PCB *processo)
     printf("\n");
 }
 
-void IOHandler(PCB *processo)
+void IOHandler(PCB *processo, OperacaoIO *operacaoIO)
 {
     /* Switch case pra ver qual IO e por no final da fila com processo_atual->io->tipo */
-    switch (processo->operacao_io->tipo)
+    switch (operacaoIO->tipo)
     {
     case DISCO:
         filaInsere(&disco, processo);
@@ -385,11 +388,14 @@ void escalona(PCB *processo, Fila *fila)
     processo->tempo_restante--;
     processo->tempo_interno++;
 
-    /* verifica se ele tem IO e se o IO ta no tempo interno dele de acontencer */
-    if (processo->operacao_io != NULL && processo->operacao_io->instante_inicio == processo->tempo_interno)
+    for (int i = 0; i < processo->quantidade_ios; i++)
     {
-        processo = filaRemove(fila);
-        IOHandler(processo);
+        /* verifica se ele tem IO e se o IO ta no tempo interno dele de acontencer */
+        if ((processo->operacao_io+i) != NULL && (processo->operacao_io+i)->instante_inicio == processo->tempo_interno)
+        {
+            processo = filaRemove(fila);
+            IOHandler(processo, (processo->operacao_io+i));
+        }
     }
 
     /* verifica se o processo ja acabou por completo */
@@ -410,11 +416,6 @@ void escalona(PCB *processo, Fila *fila)
 void roundRobin()
 {
     PCB *processo_atual;
-
-    int timer_processo = 0;
-    int timer_disco = 0;
-    int timer_fita = 0;
-    int timer_impressora = 0;
 
     /* Enquanto pelo menos uma das filas nao estiver vazia, roda */
     while (!(estaVazia(&alta)) || !(estaVazia(&baixa)) || !(estaVazia(&fita)) || !(estaVazia(&disco)) || !(estaVazia(&impressora)) || !(estaVazia(&espera)))
@@ -446,10 +447,6 @@ void roundRobin()
             escalona(processo_atual, &baixa);
         }
 
-        timer_processo++;
-        timer_disco++;
-        timer_fita++;
-        timer_impressora++;
         tempoSistema++;
 
         displayPCB(processo_atual);
