@@ -392,7 +392,7 @@ void displayProcessos(Fila* fila) {
     }
 }
 
-void displayPCB(PCB* processo) {
+void printInfoProcesso(PCB* processo) {
     printf("\nUnidade de tempo: %d \n", tempoSistema);
     printf("PID: %d\n", processo->PID);
     printf("Status: %d\n", processo->status);
@@ -531,7 +531,7 @@ void roundRobin() {
         timer_impressora++;
         tempoSistema++;
         
-        displayPCB(processo_atual);
+        printInfoProcesso(processo_atual);
 
         printf("===================================================\n");
         printf("||  Lista de processos na fila de ESPERA          ||\n");
